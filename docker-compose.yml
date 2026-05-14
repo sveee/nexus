@@ -1,0 +1,16 @@
+services:
+  nexus:
+    build: .
+    container_name: nexus
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PORT=3001
+      - DATA_DIR=/app/data
+    restart: unless-stopped
+    networks:
+      - caddy-network
+
+networks:
+  caddy-network:
+    external: true

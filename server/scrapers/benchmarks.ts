@@ -49,11 +49,27 @@ export interface AAModel {
   releaseDate: string | null;
 }
 
+export interface CombinedModel {
+  rank: number;
+  name: string;
+  provider: string;
+  meanScore: number;        // 0–100 mean of normalized scores
+  sourceCount: number;      // how many benchmarks contributed
+  url?: string;
+  scores: {
+    aa?: number;            // normalized AA intelligence index
+    llmStats?: number;      // normalized LLM Stats overall
+    arena?: number;         // normalized Arena rank → score
+    cursor?: number;        // normalized Cursor score
+  };
+}
+
 export interface BenchmarksData {
   llmStats: LLMStatsModel[];
   arena: ArenaModel[];
   cursor: CursorEval[];
   aa: AAModel[];
+  combined: CombinedModel[];
 }
 
 const UA =
@@ -302,6 +318,98 @@ export async function fetchAA(limit = 30): Promise<AAModel[]> {
   return models;
 }
 
+// ─── Combined ranking ────────────────────────────────────────────────────────
+// Normalizes each source to 0–100 via min-max, matches models across sources
+// by canonical name (strip variant suffixes, lowercase, alphanumeric only),
+// then ranks by mean of available normalized scores.
+
+function minMax(values: number[], v: number): number {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  if (max === min) return 50;
+  return ((v - min) / (max - min)) * 100;
+}
+
+// "GPT-5.5 (xhigh)" → "gpt55", "Claude Opus 4.7 (max)" → "claudeopus47"
+function canon(name: string): string {
+  return name
+    .replace(/\s*\([^)]*\)/g, '')  // strip (variant) suffixes
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 20);
+}
+
+function computeCombined(
+  aa: AAModel[],
+  llmStats: LLMStatsModel[],
+  arena: ArenaModel[],
+  cursor: CursorEval[],
+): CombinedModel[] {
+  // Pre-compute min-max normalized values per source
+  const aaScores   = aa.map(m => m.intelligenceIndex).filter((v): v is number => v !== null);
+  const llmScores  = llmStats.map(m => m.overallScore).filter((v): v is number => v !== null);
+  const arenaRanks = arena.map(m => m.rank);
+  const curScores  = cursor.map(e => e.score).filter(v => v !== null);
+
+  const aaMap     = new Map(aa.map(m => [canon(m.name), m]));
+  const llmMap    = new Map(llmStats.map(m => [canon(m.name), m]));
+  const arenaMap  = new Map(arena.map(m => [canon(m.name), m]));
+  const cursorMap = new Map(cursor.map(e => [canon(e.name), e]));
+
+  // Collect all unique canonical names, preferring AA as primary
+  const allCanons = new Set([
+    ...aaMap.keys(),
+    ...llmMap.keys(),
+    ...arenaMap.keys(),
+    ...cursorMap.keys(),
+  ]);
+
+  const rows: CombinedModel[] = [];
+
+  for (const key of allCanons) {
+    const aaM    = aaMap.get(key);
+    const llmM   = llmMap.get(key);
+    const arenaM = arenaMap.get(key);
+    const curM   = cursorMap.get(key);
+
+    // Require at least 1 source
+    const normAA     = (aaM?.intelligenceIndex != null && aaScores.length > 0)
+                         ? minMax(aaScores, aaM.intelligenceIndex) : undefined;
+    const normLLM    = (llmM?.overallScore != null && llmScores.length > 0)
+                         ? minMax(llmScores, llmM.overallScore) : undefined;
+    const normArena  = (arenaM && arenaRanks.length > 0)
+                         // invert rank: rank 1 = best = 100
+                         ? minMax(arenaRanks.map(r => -r), -arenaM.rank) : undefined;
+    const normCursor = (curM && curScores.length > 0)
+                         ? minMax(curScores, curM.score) : undefined;
+
+    const available = [normAA, normLLM, normArena, normCursor].filter((v): v is number => v !== undefined);
+    if (available.length === 0) continue;
+
+    const meanScore = available.reduce((a, b) => a + b, 0) / available.length;
+    const primary   = aaM ?? llmM ?? arenaM ?? curM!;
+
+    rows.push({
+      rank: 0,
+      name: 'name' in primary ? primary.name : (primary as CursorEval).name,
+      provider: ('provider' in primary && primary.provider) ? (primary.provider as string) : '',
+      meanScore,
+      sourceCount: available.length,
+      url: aaM ? `https://artificialanalysis.ai/models/${aaM.slug}` : llmM?.url,
+      scores: {
+        aa:       normAA,
+        llmStats: normLLM,
+        arena:    normArena,
+        cursor:   normCursor,
+      },
+    });
+  }
+
+  return rows
+    .sort((a, b) => b.meanScore - a.meanScore)
+    .map((m, i) => ({ ...m, rank: i + 1 }));
+}
+
 // ─── Main export ────────────────────────────────────────────────────────────
 
 export async function fetchBenchmarks(): Promise<BenchmarksData> {
@@ -312,10 +420,16 @@ export async function fetchBenchmarks(): Promise<BenchmarksData> {
     fetchAA(30),
   ]);
 
+  const llmStatsData = llmStats.status === 'fulfilled' ? llmStats.value : [];
+  const arenaData    = arena.status === 'fulfilled' ? arena.value : [];
+  const cursorData   = cursor.status === 'fulfilled' ? cursor.value : [];
+  const aaData       = aa.status === 'fulfilled' ? aa.value : [];
+
   return {
-    llmStats: llmStats.status === 'fulfilled' ? llmStats.value : [],
-    arena: arena.status === 'fulfilled' ? arena.value : [],
-    cursor: cursor.status === 'fulfilled' ? cursor.value : [],
-    aa: aa.status === 'fulfilled' ? aa.value : [],
+    llmStats: llmStatsData,
+    arena:    arenaData,
+    cursor:   cursorData,
+    aa:       aaData,
+    combined: computeCombined(aaData, llmStatsData, arenaData, cursorData),
   };
 }

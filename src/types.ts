@@ -112,11 +112,27 @@ export interface AAModel {
   releaseDate: string | null;
 }
 
+export interface CombinedModel {
+  rank: number;
+  name: string;
+  provider: string;
+  meanScore: number;
+  sourceCount: number;
+  url?: string;
+  scores: {
+    aa?: number;
+    llmStats?: number;
+    arena?: number;
+    cursor?: number;
+  };
+}
+
 export interface BenchmarksData {
   llmStats: LLMStatsModel[];
   arena: ArenaModel[];
   cursor: CursorEval[];
   aa: AAModel[];
+  combined: CombinedModel[];
 }
 
 export interface PaperSummary {

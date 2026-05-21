@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ExternalLink, BarChart2, Code2, Trophy, Zap, Brain } from 'lucide-react';
+import { ExternalLink, BarChart2, Code2, Trophy, Zap, Brain, Layers } from 'lucide-react';
 import type { DataState } from '../hooks/useData';
-import type { BenchmarksData, LLMStatsModel, ArenaModel, CursorEval, AAModel } from '../types';
+import type { BenchmarksData, LLMStatsModel, ArenaModel, CursorEval, AAModel, CombinedModel } from '../types';
 import { Panel } from './shared';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
   onRefresh: () => void;
 }
 
-type SubTab = 'aa' | 'llmstats' | 'arena' | 'cursor';
+type SubTab = 'combined' | 'aa' | 'llmstats' | 'arena' | 'cursor';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -68,6 +68,164 @@ function RankCell({ rank, maxRank = 30 }: { rank: number | null; maxRank?: numbe
 }
 
 // ── sub-tabs ─────────────────────────────────────────────────────────────────
+
+// Source dot with tooltip
+function SourceDot({ label, value, color }: { label: string; value?: number; color: string }) {
+  const active = value !== undefined;
+  return (
+    <div title={active ? `${label}: ${value!.toFixed(0)}` : `${label}: not in this benchmark`}
+      style={{
+        width: 8, height: 8, borderRadius: '50%',
+        background: active ? color : 'var(--border)',
+        flexShrink: 0,
+        cursor: 'default',
+      }}
+    />
+  );
+}
+
+function CombinedRow({ m }: { m: CombinedModel }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '36px 1fr 80px 36px',
+        padding: '9px 16px',
+        gap: 8,
+        alignItems: 'center',
+        borderBottom: '1px solid var(--border)',
+        transition: 'background 0.12s',
+        cursor: m.url ? 'pointer' : 'default',
+      }}
+      onClick={() => m.url && window.open(m.url, '_blank', 'noopener')}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center' }}>{rankBadge(m.rank)}</div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{
+          fontSize: 12, fontWeight: 600, color: 'var(--text)',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>{m.name}</div>
+        <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+          {m.provider && <span>{m.provider}</span>}
+          <span>·</span>
+          <div style={{ display: 'flex', gap: 3, alignItems: 'center' }} title="Source coverage: AA / LLM Stats / Arena / Cursor">
+            <SourceDot label="AA"        value={m.scores.aa}       color="var(--violet-b)" />
+            <SourceDot label="LLM Stats" value={m.scores.llmStats} color="var(--sky)" />
+            <SourceDot label="Arena"     value={m.scores.arena}    color="var(--amber)" />
+            <SourceDot label="Cursor"    value={m.scores.cursor}   color="var(--emerald)" />
+          </div>
+          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-3)', fontSize: 10 }}>
+            {m.sourceCount} source{m.sourceCount > 1 ? 's' : ''}
+          </span>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+        <div style={{ width: 44, height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
+          <div style={{
+            height: '100%', width: `${m.meanScore}%`,
+            background: scoreColor(m.meanScore, 100),
+            borderRadius: 2, transition: 'width 0.3s',
+          }} />
+        </div>
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700,
+          color: scoreColor(m.meanScore, 100), minWidth: 32, textAlign: 'right',
+        }}>{m.meanScore.toFixed(0)}</span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        {m.url && <ExternalLink size={11} style={{ color: 'var(--text-3)', opacity: 0.5 }} />}
+      </div>
+    </div>
+  );
+}
+
+function CombinedTab({ models }: { models: CombinedModel[] }) {
+  if (models.length === 0) {
+    return (
+      <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
+        Combined data not available.
+      </div>
+    );
+  }
+
+  const multi  = models.filter(m => m.sourceCount >= 2);
+  const single = models.filter(m => m.sourceCount === 1);
+
+  return (
+    <div>
+      <div style={{
+        padding: '6px 16px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize: 10,
+        color: 'var(--text-3)',
+        fontFamily: 'var(--font-mono)',
+      }}>
+        <Layers size={10} />
+        Mean of min-max normalized scores across all available benchmarks
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
+          {([['var(--violet-b)', 'AA'], ['var(--sky)', 'LLM Stats'], ['var(--amber)', 'Arena'], ['var(--emerald)', 'Cursor']] as const).map(([color, label]) => (
+            <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block' }} />
+              {label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '36px 1fr 80px 36px',
+        padding: '5px 16px',
+        gap: 8,
+        fontSize: 10,
+        color: 'var(--text-3)',
+        fontFamily: 'var(--font-mono)',
+        letterSpacing: '0.04em',
+        borderBottom: '1px solid var(--border)',
+        position: 'sticky',
+        top: 0,
+        background: 'var(--surface)',
+        zIndex: 1,
+      }}>
+        <span>#</span>
+        <span>MODEL</span>
+        <span style={{ textAlign: 'right' }}>MEAN SCORE</span>
+        <span />
+      </div>
+
+      {multi.length > 0 && (
+        <>
+          <div style={{
+            padding: '4px 16px', fontSize: 10, fontFamily: 'var(--font-mono)',
+            color: 'var(--text-3)', background: 'var(--surface-2)',
+            borderBottom: '1px solid var(--border)', letterSpacing: '0.06em',
+          }}>
+            ✦ MULTI-SOURCE — {multi.length} models found in ≥2 benchmarks
+          </div>
+          {multi.map(m => <CombinedRow key={m.name} m={m} />)}
+        </>
+      )}
+
+      {single.length > 0 && (
+        <>
+          <div style={{
+            padding: '4px 16px', fontSize: 10, fontFamily: 'var(--font-mono)',
+            color: 'var(--text-3)', background: 'var(--surface-2)',
+            borderBottom: '1px solid var(--border)', letterSpacing: '0.06em',
+          }}>
+            SINGLE-SOURCE — {single.length} models in only 1 benchmark
+          </div>
+          {single.map(m => <CombinedRow key={m.name} m={m} />)}
+        </>
+      )}
+    </div>
+  );
+}
 
 function AATab({ models }: { models: AAModel[] }) {
   if (models.length === 0) {
@@ -575,14 +733,15 @@ function CursorTab({ evals }: { evals: CursorEval[] }) {
 // ── Main panel ────────────────────────────────────────────────────────────────
 
 const SUB_TABS: { id: SubTab; label: string; icon: typeof BarChart2 }[] = [
-  { id: 'aa',       label: 'AA Intelligence', icon: Brain },
-  { id: 'llmstats', label: 'LLM Stats',      icon: BarChart2 },
-  { id: 'arena',    label: 'Arena',           icon: Trophy },
-  { id: 'cursor',   label: 'Cursor Evals',   icon: Code2 },
+  { id: 'combined', label: 'Combined',      icon: Layers },
+  { id: 'aa',       label: 'AA',            icon: Brain },
+  { id: 'llmstats', label: 'LLM Stats',     icon: BarChart2 },
+  { id: 'arena',    label: 'Arena',         icon: Trophy },
+  { id: 'cursor',   label: 'Cursor Evals',  icon: Code2 },
 ];
 
 export default function BenchmarksPanel({ state }: Props) {
-  const [subTab, setSubTab] = useState<SubTab>('aa');
+  const [subTab, setSubTab] = useState<SubTab>('combined');
 
   return (
     <Panel
@@ -635,6 +794,7 @@ export default function BenchmarksPanel({ state }: Props) {
 
           {/* Content */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
+            {subTab === 'combined' && <CombinedTab models={data.combined ?? []} />}
             {subTab === 'aa'       && <AATab models={data.aa ?? []} />}
             {subTab === 'llmstats' && <LLMStatsTab models={data.llmStats} />}
             {subTab === 'arena'    && <ArenaTab models={data.arena} />}

@@ -1,4 +1,4 @@
-import type { ApiResult, Paper, HFModel, HFDataset, GitHubRepo, RedditData, KarpathyTweet, PaperSummary } from './types';
+import type { ApiResult, Paper, HFModel, HFDataset, GitHubRepo, RedditData, KarpathyTweet, PaperSummary, BenchmarksData } from './types';
 
 async function get<T>(path: string, refresh = false): Promise<ApiResult<T>> {
   const url = refresh ? `${path}?refresh=true` : path;
@@ -17,5 +17,6 @@ export const api = {
   datasets:     (refresh?: boolean) => get<HFDataset[]>('/api/datasets', refresh),
   reddit:       (refresh?: boolean) => get<RedditData>('/api/reddit', refresh),
   karpathy:     (refresh?: boolean) => get<KarpathyTweet[]>('/api/karpathy', refresh),
+  benchmarks:   (refresh?: boolean) => get<BenchmarksData>('/api/benchmarks', refresh),
   paperSummary: (id: string)        => get<PaperSummary>(`/api/paper-summary?id=${encodeURIComponent(id)}`),
 };

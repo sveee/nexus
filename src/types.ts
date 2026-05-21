@@ -1,4 +1,4 @@
-export type Section = 'papers' | 'models' | 'github' | 'datasets' | 'reddit' | 'karpathy';
+export type Section = 'papers' | 'models' | 'github' | 'datasets' | 'reddit' | 'karpathy' | 'benchmarks';
 
 export interface KarpathyTweet {
   id: string;
@@ -61,6 +61,45 @@ export interface RedditPost {
 export interface RedditData {
   LocalLLaMA: RedditPost[];
   LocalLLM: RedditPost[];
+}
+
+export interface LLMStatsModel {
+  rank: number;
+  name: string;
+  provider: string;
+  url: string;
+  overallScore: number | null;
+  mmluPro: number | null;
+  codingScore: number | null;
+  mathScore: number | null;
+  contextK: string | null;
+  speed: string | null;
+  pricePerM: string | null;
+  license: string | null;
+  isUnreleased?: boolean;
+}
+
+export interface ArenaModel {
+  rank: number;
+  name: string;
+  provider: string | null;
+  coding: number | null;
+  math: number | null;
+  hard: number | null;
+  instruction: number | null;
+}
+
+export interface CursorEval {
+  rank: number;
+  name: string;
+  score: number;
+  avgCost: number;
+}
+
+export interface BenchmarksData {
+  llmStats: LLMStatsModel[];
+  arena: ArenaModel[];
+  cursor: CursorEval[];
 }
 
 export interface PaperSummary {

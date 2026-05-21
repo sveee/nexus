@@ -1,4 +1,4 @@
-import { BookOpen, Cpu, Github, Database, MessageSquare, AtSign } from 'lucide-react';
+import { BookOpen, Cpu, Github, Database, MessageSquare, AtSign, BarChart2 } from 'lucide-react';
 import type { Section } from '../types';
 import type { DataState } from '../hooks/useData';
 
@@ -10,6 +10,13 @@ interface SidebarProps {
 }
 
 const ITEMS = [
+  {
+    id:    'benchmarks' as Section,
+    label: 'Benchmarks',
+    sub:   'Rankings · Cost · Evals',
+    Icon:  BarChart2,
+    color: 'var(--orange)',
+  },
   {
     id:    'papers'   as Section,
     label: 'Papers',

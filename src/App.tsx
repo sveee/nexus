@@ -10,6 +10,7 @@ import GitHubPanel from './components/GitHubPanel';
 import DatasetsPanel from './components/DatasetsPanel';
 import RedditPanel from './components/RedditPanel';
 import KarpathyPanel from './components/KarpathyPanel';
+import BenchmarksPanel from './components/BenchmarksPanel';
 
 function timeAgo(ts: number | null): string {
   if (!ts) return 'never';
@@ -23,14 +24,15 @@ export default function App() {
   const [active, setActive] = useState<Section>('papers');
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
 
-  const papers   = useData(api.papers);
-  const models   = useData(api.models);
-  const github   = useData(api.github);
-  const datasets = useData(api.datasets);
-  const reddit   = useData(api.reddit);
-  const karpathy = useData(api.karpathy);
+  const papers     = useData(api.papers);
+  const models     = useData(api.models);
+  const github     = useData(api.github);
+  const datasets   = useData(api.datasets);
+  const reddit     = useData(api.reddit);
+  const karpathy   = useData(api.karpathy);
+  const benchmarks = useData(api.benchmarks);
 
-  const all = { papers, models, github, datasets, reddit, karpathy };
+  const all = { papers, models, github, datasets, reddit, karpathy, benchmarks };
 
   useEffect(() => {
     papers.refetch();
@@ -39,6 +41,7 @@ export default function App() {
     datasets.refetch();
     reddit.refetch();
     karpathy.refetch();
+    benchmarks.refetch();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isLoading = Object.values(all).some(d => d.loading);
@@ -55,9 +58,11 @@ export default function App() {
     datasets.refetch(true);
     reddit.refetch(true);
     karpathy.refetch(true);
+    benchmarks.refetch(true);
   }
 
   const ACCENT: Record<Section, string> = {
+    benchmarks: 'var(--orange)',
     papers:   'var(--violet-b)',
     models:   'var(--sky)',
     github:   'var(--emerald)',
@@ -189,12 +194,13 @@ export default function App() {
         />
 
         <main style={{ flex: 1, overflow: 'hidden' }}>
-          {active === 'papers'   && <PapersPanel   state={papers}   onRefresh={() => papers.refetch(true)} />}
-          {active === 'models'   && <ModelsPanel   state={models}   onRefresh={() => models.refetch(true)} />}
-          {active === 'github'   && <GitHubPanel   state={github}   onRefresh={() => github.refetch(true)} />}
-          {active === 'datasets' && <DatasetsPanel state={datasets} onRefresh={() => datasets.refetch(true)} />}
-          {active === 'reddit'   && <RedditPanel   state={reddit}   onRefresh={() => reddit.refetch(true)} />}
-          {active === 'karpathy' && <KarpathyPanel state={karpathy} onRefresh={() => karpathy.refetch(true)} />}
+          {active === 'papers'     && <PapersPanel     state={papers}     onRefresh={() => papers.refetch(true)} />}
+          {active === 'models'     && <ModelsPanel     state={models}     onRefresh={() => models.refetch(true)} />}
+          {active === 'github'     && <GitHubPanel     state={github}     onRefresh={() => github.refetch(true)} />}
+          {active === 'datasets'   && <DatasetsPanel   state={datasets}   onRefresh={() => datasets.refetch(true)} />}
+          {active === 'reddit'     && <RedditPanel     state={reddit}     onRefresh={() => reddit.refetch(true)} />}
+          {active === 'karpathy'   && <KarpathyPanel   state={karpathy}   onRefresh={() => karpathy.refetch(true)} />}
+          {active === 'benchmarks' && <BenchmarksPanel state={benchmarks} onRefresh={() => benchmarks.refetch(true)} />}
         </main>
       </div>
     </div>

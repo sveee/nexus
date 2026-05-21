@@ -96,10 +96,27 @@ export interface CursorEval {
   avgCost: number;
 }
 
+export interface AAModel {
+  rank: number;
+  name: string;
+  provider: string;
+  slug: string;
+  intelligenceIndex: number | null;
+  codingIndex: number | null;
+  agenticIndex: number | null;
+  priceInput: number | null;
+  priceOutput: number | null;
+  outputSpeed: number | null;
+  contextWindow: string;
+  isOpenWeights: boolean;
+  releaseDate: string | null;
+}
+
 export interface BenchmarksData {
   llmStats: LLMStatsModel[];
   arena: ArenaModel[];
   cursor: CursorEval[];
+  aa: AAModel[];
 }
 
 export interface PaperSummary {

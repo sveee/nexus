@@ -33,10 +33,27 @@ export interface CursorEval {
   avgCost: number;
 }
 
+export interface AAModel {
+  rank: number;
+  name: string;
+  provider: string;
+  slug: string;
+  intelligenceIndex: number | null;
+  codingIndex: number | null;
+  agenticIndex: number | null;
+  priceInput: number | null;   // per 1M input tokens
+  priceOutput: number | null;  // per 1M output tokens
+  outputSpeed: number | null;  // tokens/sec
+  contextWindow: string;
+  isOpenWeights: boolean;
+  releaseDate: string | null;
+}
+
 export interface BenchmarksData {
   llmStats: LLMStatsModel[];
   arena: ArenaModel[];
   cursor: CursorEval[];
+  aa: AAModel[];
 }
 
 const UA =
@@ -216,18 +233,89 @@ export async function fetchCursorEvals(): Promise<CursorEval[]> {
   return evals;
 }
 
+// ─── artificialanalysis.ai ───────────────────────────────────────────────────
+// Data fetched via Next.js RSC (React Server Components) payload, which embeds
+// the full defaultData array containing 500+ model objects with all benchmark fields.
+
+function extractJsonArray(s: string, startIdx: number): string | null {
+  let depth = 0;
+  let i = startIdx;
+  while (i < s.length) {
+    if (s[i] === '[') depth++;
+    else if (s[i] === ']') {
+      depth--;
+      if (depth === 0) return s.slice(startIdx, i + 1);
+    }
+    i++;
+  }
+  return null;
+}
+
+export async function fetchAA(limit = 30): Promise<AAModel[]> {
+  const res = await fetch('https://artificialanalysis.ai/models', {
+    headers: {
+      'User-Agent': UA,
+      Accept: 'text/html,application/xhtml+xml,*/*',
+      RSC: '1',
+      'Next-Router-State-Tree':
+        '%5B%22%22%2C%7B%22children%22%3A%5B%22(pages)%22%2C%7B%22children%22%3A%5B%22models%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%5D%7D%5D%7D%5D%7D%5D',
+    },
+  });
+  if (!res.ok) throw new Error(`artificialanalysis.ai responded ${res.status}`);
+
+  const text = await res.text();
+  const markerKey = '"defaultData":[{';
+  const markerIdx = text.indexOf(markerKey);
+  if (markerIdx === -1) throw new Error('AA: defaultData not found in RSC payload');
+
+  const arrStr = extractJsonArray(text, markerIdx + '"defaultData":'.length);
+  if (!arrStr) throw new Error('AA: failed to extract defaultData array');
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw: any[] = JSON.parse(arrStr);
+
+  const models: AAModel[] = raw
+    .filter(
+      (m) =>
+        !m.deleted &&
+        !m.deprecated &&
+        m.intelligence_index != null,
+    )
+    .sort((a, b) => (b.intelligence_index ?? 0) - (a.intelligence_index ?? 0))
+    .slice(0, limit)
+    .map((m, i) => ({
+      rank: i + 1,
+      name: m.name ?? m.short_name ?? 'Unknown',
+      provider: m.model_creators?.name ?? 'Unknown',
+      slug: m.slug ?? '',
+      intelligenceIndex: m.intelligence_index ?? null,
+      codingIndex: m.coding_index ?? null,
+      agenticIndex: m.agentic_index ?? null,
+      priceInput: m.price_1m_input_tokens ?? null,
+      priceOutput: m.price_1m_output_tokens ?? null,
+      outputSpeed: m.timescaleData?.median_output_speed ?? null,
+      contextWindow: m.contextWindowFormatted ?? '',
+      isOpenWeights: !!m.is_open_weights,
+      releaseDate: m.release_date ?? null,
+    }));
+
+  return models;
+}
+
 // ─── Main export ────────────────────────────────────────────────────────────
 
 export async function fetchBenchmarks(): Promise<BenchmarksData> {
-  const [llmStats, arena, cursor] = await Promise.allSettled([
+  const [llmStats, arena, cursor, aa] = await Promise.allSettled([
     fetchLLMStats(25),
     fetchArenaLeaderboard(30),
     fetchCursorEvals(),
+    fetchAA(30),
   ]);
 
   return {
     llmStats: llmStats.status === 'fulfilled' ? llmStats.value : [],
     arena: arena.status === 'fulfilled' ? arena.value : [],
     cursor: cursor.status === 'fulfilled' ? cursor.value : [],
+    aa: aa.status === 'fulfilled' ? aa.value : [],
   };
 }

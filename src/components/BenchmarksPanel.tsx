@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ExternalLink, BarChart2, Code2, Trophy, Zap } from 'lucide-react';
+import { ExternalLink, BarChart2, Code2, Trophy, Zap, Brain } from 'lucide-react';
 import type { DataState } from '../hooks/useData';
-import type { BenchmarksData, LLMStatsModel, ArenaModel, CursorEval } from '../types';
+import type { BenchmarksData, LLMStatsModel, ArenaModel, CursorEval, AAModel } from '../types';
 import { Panel } from './shared';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
   onRefresh: () => void;
 }
 
-type SubTab = 'llmstats' | 'arena' | 'cursor';
+type SubTab = 'aa' | 'llmstats' | 'arena' | 'cursor';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -68,6 +68,158 @@ function RankCell({ rank, maxRank = 30 }: { rank: number | null; maxRank?: numbe
 }
 
 // ── sub-tabs ─────────────────────────────────────────────────────────────────
+
+function AATab({ models }: { models: AAModel[] }) {
+  if (models.length === 0) {
+    return (
+      <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>
+        Could not load Artificial Analysis data.
+        <div style={{ marginTop: 8, fontSize: 11 }}>
+          <a href="https://artificialanalysis.ai/models" target="_blank" rel="noreferrer"
+            style={{ color: 'var(--sky)', textDecoration: 'none' }}>
+            Visit artificialanalysis.ai ↗
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  const maxIntel = Math.max(...models.map(m => m.intelligenceIndex ?? 0));
+
+  return (
+    <div>
+      <div style={{
+        padding: '6px 16px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize: 10,
+        color: 'var(--text-3)',
+        fontFamily: 'var(--font-mono)',
+      }}>
+        <Brain size={10} />
+        Source: artificialanalysis.ai · Intelligence, Coding &amp; Agentic Indices
+        <a href="https://artificialanalysis.ai/models" target="_blank" rel="noreferrer"
+          style={{ color: 'var(--sky)', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 3 }}>
+          open <ExternalLink size={9} />
+        </a>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '36px 1fr 70px 62px 62px 62px 70px 60px',
+        padding: '5px 16px',
+        gap: 8,
+        fontSize: 10,
+        color: 'var(--text-3)',
+        fontFamily: 'var(--font-mono)',
+        letterSpacing: '0.04em',
+        borderBottom: '1px solid var(--border)',
+        position: 'sticky',
+        top: 0,
+        background: 'var(--surface)',
+        zIndex: 1,
+      }}>
+        <span>#</span>
+        <span>MODEL</span>
+        <span style={{ textAlign: 'right' }}>INTEL</span>
+        <span style={{ textAlign: 'right' }}>CODE</span>
+        <span style={{ textAlign: 'right' }}>AGENT</span>
+        <span style={{ textAlign: 'right' }}>SPEED</span>
+        <span style={{ textAlign: 'right' }}>PRICE/M</span>
+        <span style={{ textAlign: 'center' }}>CTX</span>
+      </div>
+
+      {models.map((m) => {
+        const url = `https://artificialanalysis.ai/models/${m.slug}`;
+        return (
+          <div
+            key={m.slug || m.name}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '36px 1fr 70px 62px 62px 62px 70px 60px',
+              padding: '9px 16px',
+              gap: 8,
+              alignItems: 'center',
+              borderBottom: '1px solid var(--border)',
+              transition: 'background 0.12s',
+              cursor: 'pointer',
+            }}
+            onClick={() => window.open(url, '_blank', 'noopener')}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>{rankBadge(m.rank)}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--text)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+              }}>
+                {m.name}
+                {m.isOpenWeights && (
+                  <span style={{
+                    fontSize: 9,
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--emerald)',
+                    background: 'rgba(52,211,153,0.12)',
+                    padding: '1px 4px',
+                    borderRadius: 3,
+                    flexShrink: 0,
+                  }}>OSS</span>
+                )}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 1 }}>{m.provider}</div>
+            </div>
+            {/* Intelligence index with bar */}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
+                <div style={{ width: 30, height: 3, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${((m.intelligenceIndex ?? 0) / maxIntel) * 100}%`,
+                    background: scoreColor(m.intelligenceIndex, maxIntel),
+                    borderRadius: 2,
+                  }} />
+                </div>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: scoreColor(m.intelligenceIndex, maxIntel),
+                }}>
+                  {m.intelligenceIndex != null ? m.intelligenceIndex.toFixed(1) : '—'}
+                </span>
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <ScorePill value={m.codingIndex} max={maxIntel} />
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <ScorePill value={m.agenticIndex} max={maxIntel} />
+            </div>
+            <div style={{ textAlign: 'right', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-2)' }}>
+              {m.outputSpeed != null ? `${Math.round(m.outputSpeed)}t/s` : '—'}
+            </div>
+            <div style={{ textAlign: 'right', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-2)' }}>
+              {m.priceOutput != null ? `$${m.priceOutput.toFixed(2)}` : '—'}
+            </div>
+            <div style={{ textAlign: 'center', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-3)' }}>
+              {m.contextWindow || '—'}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function LLMStatsTab({ models }: { models: LLMStatsModel[] }) {
   if (models.length === 0) {
@@ -423,13 +575,14 @@ function CursorTab({ evals }: { evals: CursorEval[] }) {
 // ── Main panel ────────────────────────────────────────────────────────────────
 
 const SUB_TABS: { id: SubTab; label: string; icon: typeof BarChart2 }[] = [
-  { id: 'llmstats', label: 'LLM Stats', icon: BarChart2 },
-  { id: 'arena',    label: 'Arena',     icon: Trophy },
-  { id: 'cursor',   label: 'Cursor Evals', icon: Code2 },
+  { id: 'aa',       label: 'AA Intelligence', icon: Brain },
+  { id: 'llmstats', label: 'LLM Stats',      icon: BarChart2 },
+  { id: 'arena',    label: 'Arena',           icon: Trophy },
+  { id: 'cursor',   label: 'Cursor Evals',   icon: Code2 },
 ];
 
 export default function BenchmarksPanel({ state }: Props) {
-  const [subTab, setSubTab] = useState<SubTab>('llmstats');
+  const [subTab, setSubTab] = useState<SubTab>('aa');
 
   return (
     <Panel
@@ -482,6 +635,7 @@ export default function BenchmarksPanel({ state }: Props) {
 
           {/* Content */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
+            {subTab === 'aa'       && <AATab models={data.aa ?? []} />}
             {subTab === 'llmstats' && <LLMStatsTab models={data.llmStats} />}
             {subTab === 'arena'    && <ArenaTab models={data.arena} />}
             {subTab === 'cursor'   && <CursorTab evals={data.cursor} />}

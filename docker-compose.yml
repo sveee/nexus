@@ -1,16 +1,13 @@
 services:
   nexus:
     build: .
+    image: nexus:latest
     container_name: nexus
+    ports:
+      - "${HOST_PORT:-3001}:3001"
     volumes:
       - ./data:/app/data
     environment:
       - PORT=3001
       - DATA_DIR=/app/data
     restart: unless-stopped
-    networks:
-      - caddy-network
-
-networks:
-  caddy-network:
-    external: true

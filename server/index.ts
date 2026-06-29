@@ -13,7 +13,7 @@ import { fetchBenchmarks } from './scrapers/benchmarks.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
-const PORT = 3001;
+const PORT = Number(process.env.PORT) || 3001;
 
 app.use(cors());
 app.use(express.json());
@@ -152,6 +152,7 @@ app.get('*', (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n  🔮 Nexus ML Dashboard`);
-  console.log(`  ➜  API: http://localhost:${PORT}/api/papers`);
-  console.log(`  ➜  UI:  http://localhost:5173 (via Vite)\n`);
+  console.log(`  ➜  Server: http://localhost:${PORT}`);
+  console.log(`  ➜  API:    http://localhost:${PORT}/api/papers`);
+  console.log(`  ➜  Dev UI: http://localhost:5173 (via Vite)\n`);
 });

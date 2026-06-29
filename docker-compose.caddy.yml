@@ -1,0 +1,18 @@
+# Overlay for running Nexus behind a Caddy reverse proxy on a shared,
+# pre-existing Docker network named `caddy-network`.
+#
+# Caddy reaches the container by name on that network (reverse_proxy nexus:3001),
+# so publishing a host port is optional here — keep it from the base file for
+# direct LAN access, or drop it by overriding `ports` if you only want Caddy.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d --build
+services:
+  nexus:
+    networks:
+      - default
+      - caddy-network
+
+networks:
+  caddy-network:
+    external: true

@@ -1,15 +1,4 @@
-export type Section = 'papers' | 'models' | 'github' | 'datasets' | 'reddit' | 'karpathy' | 'benchmarks';
-
-export interface KarpathyTweet {
-  id: string;
-  text: string;
-  url: string;
-  pubDate: string;
-  timestamp: number;
-  isRetweet: boolean;
-  isQuote: boolean;
-  quotedAuthor?: string;
-}
+export type Section = 'overview' | 'benchmarks' | 'papers' | 'models' | 'github' | 'datasets';
 
 export interface Paper {
   title: string;
@@ -43,24 +32,6 @@ export interface GitHubRepo {
   new_stars: number;
   language: string;
   url: string;
-}
-
-export interface RedditPost {
-  id: string;
-  title: string;
-  url: string;
-  score: number;
-  num_comments: number;
-  author: string;
-  thumbnail?: string;
-  permalink: string;
-  created_utc: number;
-  subreddit: string;
-}
-
-export interface RedditData {
-  LocalLLaMA: RedditPost[];
-  LocalLLM: RedditPost[];
 }
 
 export interface LLMStatsModel {

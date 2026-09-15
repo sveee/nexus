@@ -164,33 +164,16 @@ a { color: inherit; text-decoration: none; }
 }
 .nav-btn:hover { background: rgba(255,255,255,0.04); color: var(--text); }
 
+.nav-btn.active[data-s="overview"]  { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.14); color: var(--text); }
+.nav-btn.active[data-s="benchmarks"]{ background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.22);  color: var(--text); }
 .nav-btn.active[data-s="papers"]  { background: rgba(124,58,237,0.1);  border-color: rgba(124,58,237,0.22);  color: var(--text); }
 .nav-btn.active[data-s="models"]  { background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.22);  color: var(--text); }
 .nav-btn.active[data-s="github"]  { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.22);  color: var(--text); }
 .nav-btn.active[data-s="datasets"]{ background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.22);  color: var(--text); }
-.nav-btn.active[data-s="reddit"]  { background: rgba(244,63,94,0.08);  border-color: rgba(244,63,94,0.22);   color: var(--text); }
 
 /* ---- Ext link ---- */
 .ext { transition: color 0.13s; }
 .ext:hover { color: var(--violet-b); }
-
-/* ---- Sub-tab (Reddit) ---- */
-.subtab {
-  padding: 5px 14px;
-  border-radius: var(--r-sm);
-  border: none;
-  background: none;
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  color: var(--text-2);
-  transition: background 0.13s, color 0.13s;
-}
-.subtab:hover { background: rgba(255,255,255,0.05); color: var(--text); }
-.subtab.active { background: rgba(244,63,94,0.1); color: var(--rose); }
-
-.nav-btn.active[data-s="karpathy"]{ background: rgba(232,121,249,0.08); border-color: rgba(232,121,249,0.22); color: var(--text); }
 
 /* ---- Show more button ---- */
 .show-more-btn {
@@ -211,53 +194,120 @@ a { color: inherit; text-decoration: none; }
   background: rgba(255,255,255,0.04);
 }
 
-/* ---- Tweet card ---- */
-.tweet-card {
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.12s;
-  position: relative;
+/* ---- Overview ---- */
+.overview {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px;
 }
-.tweet-card::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--fuchsia);
-  opacity: 0;
-  transition: opacity 0.13s;
-}
-.tweet-card:hover { background: rgba(232,121,249,0.04); }
-.tweet-card:hover::before { opacity: 1; }
-.tweet-card-text {
-  font-size: 13.5px;
-  line-height: 1.6;
+.overview-hero { margin-bottom: 20px; }
+.overview-hero h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.02em;
   color: var(--text);
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
+}
+.overview-hero p {
+  color: var(--text-2);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.ov-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
   overflow: hidden;
+  transition: border-color 0.15s;
 }
-.tweet-card-text--expanded {
-  -webkit-line-clamp: unset;
-  display: block;
-}
-.tweet-card-footer {
+.ov-card:hover { border-color: rgba(255,255,255,0.13); }
+.ov-card-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 9px;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--border);
+}
+.ov-card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.ov-card-meta {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.ov-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-2);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.13s, color 0.13s;
+}
+.ov-view-all:hover { border-color: var(--ov-accent); color: var(--text); }
+.ov-card-body { padding: 5px 0; }
+.ov-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ov-row:hover { background: rgba(255,255,255,0.03); }
+.ov-rank {
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-3);
+  width: 13px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.ov-row-primary {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ov-row-secondary {
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.ov-empty {
+  padding: 22px 15px;
+  color: var(--text-3);
+  font-size: 12px;
   font-family: var(--font-mono);
+  text-align: center;
 }
-.tweet-card-footer a {
-  color: var(--fuchsia);
-  opacity: 0.7;
-  transition: opacity 0.13s;
-}
-.tweet-card-footer a:hover { opacity: 1; }
+
 .panel { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 .panel-head {
   display: flex;
@@ -328,6 +378,10 @@ a { color: inherit; text-decoration: none; }
 
   .panel-head { padding: 10px 14px; gap: 7px; }
   .panel-head h2 { font-size: 15px; }
+
+  .overview { padding: 14px; }
+  .overview-grid { grid-template-columns: 1fr; gap: 12px; }
+  .overview-hero h1 { font-size: 20px; }
 
   .tbl th, .tbl td { padding: 8px 10px; font-size: 12px; }
 

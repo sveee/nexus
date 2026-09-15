@@ -6,8 +6,6 @@ import { getCached, setCached } from './db.js';
 import { fetchPapers } from './scrapers/papers.js';
 import { fetchGitHubTrending } from './scrapers/github.js';
 import { fetchHFModels, fetchHFDatasets } from './scrapers/hf.js';
-import { fetchSubredditPosts } from './scrapers/reddit.js';
-import { fetchKarpathyTweets } from './scrapers/karpathy.js';
 import { fetchBenchmarks } from './scrapers/benchmarks.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -84,26 +82,6 @@ app.get('/api/datasets', async (req, res) => {
   }
 });
 
-app.get('/api/reddit', async (req, res) => {
-  try {
-    const refresh = req.query['refresh'] === 'true';
-    const result = await withCache(
-      'reddit',
-      async () => {
-        const [llama, llm] = await Promise.all([
-          fetchSubredditPosts('LocalLLaMA', 25),
-          fetchSubredditPosts('LocalLLM', 15),
-        ]);
-        return { LocalLLaMA: llama, LocalLLM: llm };
-      },
-      refresh
-    );
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
-});
-
 app.get('/api/paper-summary', async (req, res) => {
   const id = req.query['id'] as string;
   if (!id) return res.status(400).json({ error: 'id required' });
@@ -117,16 +95,6 @@ app.get('/api/paper-summary', async (req, res) => {
         ai_keywords: data.ai_keywords ?? [],
       };
     }, false);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
-});
-
-app.get('/api/karpathy', async (req, res) => {
-  try {
-    const refresh = req.query['refresh'] === 'true';
-    const result = await withCache('karpathy', () => fetchKarpathyTweets(20), refresh);
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: String(err) });

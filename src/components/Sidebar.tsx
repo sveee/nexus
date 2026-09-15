@@ -1,15 +1,22 @@
-import { BookOpen, Cpu, Github, Database, MessageSquare, AtSign, BarChart2 } from 'lucide-react';
+import { LayoutGrid, BookOpen, Cpu, Github, Database, BarChart2 } from 'lucide-react';
 import type { Section } from '../types';
 import type { DataState } from '../hooks/useData';
 
 interface SidebarProps {
   active: Section;
   onSelect: (s: Section) => void;
-  states: Record<Section, DataState<unknown>>;
+  states: Partial<Record<Section, DataState<unknown>>>;
   open: boolean;
 }
 
 const ITEMS = [
+  {
+    id:    'overview' as Section,
+    label: 'Overview',
+    sub:   'At a glance',
+    Icon:  LayoutGrid,
+    color: 'var(--text)',
+  },
   {
     id:    'benchmarks' as Section,
     label: 'Benchmarks',
@@ -25,25 +32,11 @@ const ITEMS = [
     color: 'var(--violet-b)',
   },
   {
-    id:    'karpathy' as Section,
-    label: 'Karpathy',
-    sub:   '@karpathy · Tweets',
-    Icon:  AtSign,
-    color: 'var(--fuchsia)',
-  },
-  {
     id:    'models'   as Section,
     label: 'Models',
     sub:   'HF Trending',
     Icon:  Cpu,
     color: 'var(--sky)',
-  },
-  {
-    id:    'reddit'   as Section,
-    label: 'Reddit',
-    sub:   'LocalLLaMA · LocalLLM',
-    Icon:  MessageSquare,
-    color: 'var(--rose)',
   },
   {
     id:    'github'   as Section,
@@ -91,17 +84,17 @@ export default function Sidebar({ active, onSelect, states, open }: SidebarProps
               </div>
             </div>
 
-            {/* State indicator */}
-            {st.loading && (
+            {/* State indicator (overview has no data source) */}
+            {st?.loading && (
               <div
                 className="pulse"
                 style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }}
               />
             )}
-            {!st.loading && st.error && (
+            {st && !st.loading && st.error && (
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--rose)', flexShrink: 0 }} />
             )}
-            {!st.loading && !st.error && st.data !== null && (
+            {st && !st.loading && !st.error && st.data !== null && (
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: color, opacity: 0.35, flexShrink: 0 }} />
             )}
           </button>

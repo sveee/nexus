@@ -4,12 +4,11 @@ import type { Section } from './types';
 import { api } from './api';
 import { useData } from './hooks/useData';
 import Sidebar from './components/Sidebar';
+import OverviewPanel from './components/OverviewPanel';
 import PapersPanel from './components/PapersPanel';
 import ModelsPanel from './components/ModelsPanel';
 import GitHubPanel from './components/GitHubPanel';
 import DatasetsPanel from './components/DatasetsPanel';
-import RedditPanel from './components/RedditPanel';
-import KarpathyPanel from './components/KarpathyPanel';
 import BenchmarksPanel from './components/BenchmarksPanel';
 
 function timeAgo(ts: number | null): string {
@@ -21,26 +20,22 @@ function timeAgo(ts: number | null): string {
 }
 
 export default function App() {
-  const [active, setActive] = useState<Section>('papers');
+  const [active, setActive] = useState<Section>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768);
 
   const papers     = useData(api.papers);
   const models     = useData(api.models);
   const github     = useData(api.github);
   const datasets   = useData(api.datasets);
-  const reddit     = useData(api.reddit);
-  const karpathy   = useData(api.karpathy);
   const benchmarks = useData(api.benchmarks);
 
-  const all = { papers, models, github, datasets, reddit, karpathy, benchmarks };
+  const all = { papers, models, github, datasets, benchmarks };
 
   useEffect(() => {
     papers.refetch();
     models.refetch();
     github.refetch();
     datasets.refetch();
-    reddit.refetch();
-    karpathy.refetch();
     benchmarks.refetch();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -56,19 +51,16 @@ export default function App() {
     models.refetch(true);
     github.refetch(true);
     datasets.refetch(true);
-    reddit.refetch(true);
-    karpathy.refetch(true);
     benchmarks.refetch(true);
   }
 
   const ACCENT: Record<Section, string> = {
+    overview: 'var(--text-2)',
     benchmarks: 'var(--orange)',
     papers:   'var(--violet-b)',
     models:   'var(--sky)',
     github:   'var(--emerald)',
     datasets: 'var(--amber)',
-    reddit:   'var(--rose)',
-    karpathy: 'var(--fuchsia)',
   };
 
   return (
@@ -194,12 +186,11 @@ export default function App() {
         />
 
         <main style={{ flex: 1, overflow: 'hidden' }}>
+          {active === 'overview'   && <OverviewPanel   states={all}       onNavigate={setActive} />}
           {active === 'papers'     && <PapersPanel     state={papers}     onRefresh={() => papers.refetch(true)} />}
           {active === 'models'     && <ModelsPanel     state={models}     onRefresh={() => models.refetch(true)} />}
           {active === 'github'     && <GitHubPanel     state={github}     onRefresh={() => github.refetch(true)} />}
           {active === 'datasets'   && <DatasetsPanel   state={datasets}   onRefresh={() => datasets.refetch(true)} />}
-          {active === 'reddit'     && <RedditPanel     state={reddit}     onRefresh={() => reddit.refetch(true)} />}
-          {active === 'karpathy'   && <KarpathyPanel   state={karpathy}   onRefresh={() => karpathy.refetch(true)} />}
           {active === 'benchmarks' && <BenchmarksPanel state={benchmarks} onRefresh={() => benchmarks.refetch(true)} />}
         </main>
       </div>

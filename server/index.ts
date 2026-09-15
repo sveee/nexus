@@ -6,6 +6,7 @@ import { getCached, setCached } from './db.js';
 import { fetchPapers } from './scrapers/papers.js';
 import { fetchGitHubTrending } from './scrapers/github.js';
 import { fetchHFModels, fetchHFDatasets } from './scrapers/hf.js';
+import { fetchKarpathyTweets } from './scrapers/karpathy.js';
 import { fetchBenchmarks } from './scrapers/benchmarks.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -95,6 +96,16 @@ app.get('/api/paper-summary', async (req, res) => {
         ai_keywords: data.ai_keywords ?? [],
       };
     }, false);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+app.get('/api/karpathy', async (req, res) => {
+  try {
+    const refresh = req.query['refresh'] === 'true';
+    const result = await withCache('karpathy', () => fetchKarpathyTweets(20), refresh);
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: String(err) });

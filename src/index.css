@@ -170,6 +170,7 @@ a { color: inherit; text-decoration: none; }
 .nav-btn.active[data-s="models"]  { background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.22);  color: var(--text); }
 .nav-btn.active[data-s="github"]  { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.22);  color: var(--text); }
 .nav-btn.active[data-s="datasets"]{ background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.22);  color: var(--text); }
+.nav-btn.active[data-s="karpathy"]{ background: rgba(232,121,249,0.08); border-color: rgba(232,121,249,0.22); color: var(--text); }
 
 /* ---- Ext link ---- */
 .ext { transition: color 0.13s; }
@@ -193,6 +194,54 @@ a { color: inherit; text-decoration: none; }
   color: var(--text-2);
   background: rgba(255,255,255,0.04);
 }
+
+/* ---- Tweet card ---- */
+.tweet-card {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+}
+.tweet-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--fuchsia);
+  opacity: 0;
+  transition: opacity 0.13s;
+}
+.tweet-card:hover { background: rgba(232,121,249,0.04); }
+.tweet-card:hover::before { opacity: 1; }
+.tweet-card-text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tweet-card-text--expanded {
+  -webkit-line-clamp: unset;
+  display: block;
+}
+.tweet-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 9px;
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+}
+.tweet-card-footer a {
+  color: var(--fuchsia);
+  opacity: 0.7;
+  transition: opacity 0.13s;
+}
+.tweet-card-footer a:hover { opacity: 1; }
 
 /* ---- Overview ---- */
 .overview {

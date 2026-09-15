@@ -1,4 +1,15 @@
-export type Section = 'overview' | 'benchmarks' | 'papers' | 'models' | 'github' | 'datasets';
+export type Section = 'overview' | 'benchmarks' | 'papers' | 'karpathy' | 'models' | 'github' | 'datasets';
+
+export interface KarpathyTweet {
+  id: string;
+  text: string;
+  url: string;
+  pubDate: string;
+  timestamp: number;
+  isRetweet: boolean;
+  isQuote: boolean;
+  quotedAuthor?: string;
+}
 
 export interface Paper {
   title: string;

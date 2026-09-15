@@ -1,14 +1,15 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { BarChart2, BookOpen, Cpu, Github, Database, ArrowRight } from 'lucide-react';
+import { BarChart2, BookOpen, Cpu, Github, Database, AtSign, ArrowRight } from 'lucide-react';
 import type { DataState } from '../hooks/useData';
-import type { Section, BenchmarksData, Paper, HFModel, HFDataset, GitHubRepo } from '../types';
-import { formatNum } from './shared';
+import type { Section, BenchmarksData, Paper, HFModel, HFDataset, GitHubRepo, KarpathyTweet } from '../types';
+import { formatNum, timeAgo } from './shared';
 
 interface Props {
   states: {
     benchmarks: DataState<BenchmarksData>;
     papers: DataState<Paper[]>;
+    karpathy: DataState<KarpathyTweet[]>;
     models: DataState<HFModel[]>;
     github: DataState<GitHubRepo[]>;
     datasets: DataState<HFDataset[]>;
@@ -117,6 +118,28 @@ export default function OverviewPanel({ states, onNavigate }: Props) {
               metric={`▲ ${formatNum(p.likes)}`} metricClass="badge-violet"
               onClick={() => open(p.url)}
             />
+          ))}
+        />
+
+        <OvCard
+          title="Karpathy" meta="@KARPATHY · TWEETS" Icon={AtSign}
+          color="var(--fuchsia)" section="karpathy" state={states.karpathy} onNavigate={onNavigate}
+          render={(d) => d.slice(0, 4).map((t) => (
+            <div key={t.id} className="ov-row" onClick={() => open(t.url)}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  className="ext"
+                  style={{
+                    fontSize: 12.5, lineHeight: 1.5, color: 'var(--text)',
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  }}
+                >
+                  {t.isRetweet && <span className="badge badge-fuchsia" style={{ fontSize: 9, marginRight: 5 }}>RT</span>}
+                  {t.text}
+                </div>
+                <div className="ov-row-secondary">{timeAgo(t.timestamp / 1000)}</div>
+              </div>
+            </div>
           ))}
         />
 

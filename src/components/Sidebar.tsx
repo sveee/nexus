@@ -1,4 +1,4 @@
-import { LayoutGrid, BookOpen, Cpu, Github, Database, BarChart2 } from 'lucide-react';
+import { LayoutGrid, BookOpen, Cpu, Github, Database, BarChart2, AtSign } from 'lucide-react';
 import type { Section } from '../types';
 import type { DataState } from '../hooks/useData';
 
@@ -30,6 +30,13 @@ const ITEMS = [
     sub:   'HuggingFace · Weekly',
     Icon:  BookOpen,
     color: 'var(--violet-b)',
+  },
+  {
+    id:    'karpathy' as Section,
+    label: 'Karpathy',
+    sub:   '@karpathy · Tweets',
+    Icon:  AtSign,
+    color: 'var(--fuchsia)',
   },
   {
     id:    'models'   as Section,

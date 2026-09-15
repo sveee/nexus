@@ -9,6 +9,7 @@ import PapersPanel from './components/PapersPanel';
 import ModelsPanel from './components/ModelsPanel';
 import GitHubPanel from './components/GitHubPanel';
 import DatasetsPanel from './components/DatasetsPanel';
+import KarpathyPanel from './components/KarpathyPanel';
 import BenchmarksPanel from './components/BenchmarksPanel';
 
 function timeAgo(ts: number | null): string {
@@ -27,15 +28,17 @@ export default function App() {
   const models     = useData(api.models);
   const github     = useData(api.github);
   const datasets   = useData(api.datasets);
+  const karpathy   = useData(api.karpathy);
   const benchmarks = useData(api.benchmarks);
 
-  const all = { papers, models, github, datasets, benchmarks };
+  const all = { papers, models, github, datasets, karpathy, benchmarks };
 
   useEffect(() => {
     papers.refetch();
     models.refetch();
     github.refetch();
     datasets.refetch();
+    karpathy.refetch();
     benchmarks.refetch();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -51,6 +54,7 @@ export default function App() {
     models.refetch(true);
     github.refetch(true);
     datasets.refetch(true);
+    karpathy.refetch(true);
     benchmarks.refetch(true);
   }
 
@@ -58,6 +62,7 @@ export default function App() {
     overview: 'var(--text-2)',
     benchmarks: 'var(--orange)',
     papers:   'var(--violet-b)',
+    karpathy: 'var(--fuchsia)',
     models:   'var(--sky)',
     github:   'var(--emerald)',
     datasets: 'var(--amber)',
@@ -191,6 +196,7 @@ export default function App() {
           {active === 'models'     && <ModelsPanel     state={models}     onRefresh={() => models.refetch(true)} />}
           {active === 'github'     && <GitHubPanel     state={github}     onRefresh={() => github.refetch(true)} />}
           {active === 'datasets'   && <DatasetsPanel   state={datasets}   onRefresh={() => datasets.refetch(true)} />}
+          {active === 'karpathy'   && <KarpathyPanel   state={karpathy}   onRefresh={() => karpathy.refetch(true)} />}
           {active === 'benchmarks' && <BenchmarksPanel state={benchmarks} onRefresh={() => benchmarks.refetch(true)} />}
         </main>
       </div>
